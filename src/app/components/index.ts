@@ -1,7 +1,5 @@
-import { BoardComponent } from "./board/board.component";
+import { GameComponent } from './board/game.component';
 
-export const components = [
-  BoardComponent
-];  
+export const components = [GameComponent];
 
-export * from './board/board.component';
+export * from './board/game.component';
