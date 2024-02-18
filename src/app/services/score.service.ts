@@ -1,19 +1,22 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { scan, startWith } from 'rxjs';
+import { NavService } from '.';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ScoreService {
-  private _score$ = new BehaviorSubject<number>(0);
+  constructor(private navService: NavService) {}
 
+  // Score increments by 1 for every snakeLength$ emitted
   public get score$() {
-    return this._score$.asObservable();
+    return this.navService.snakeLength$.pipe(
+      startWith(0),
+      scan((score, _) => score + 1)
+    );
   }
 
-  public incrementScore() {
-    this._score$.next(this._score$.value + 1);
+  incrementScore() {
+    this.navService.length$ = 1;
   }
-
-  constructor() {}
 }
