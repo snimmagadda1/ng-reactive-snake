@@ -15,3 +15,22 @@ export function getRandomPoint(): Point {
 export function isEmptyCell(position: Point, snake: Point[]): boolean {
   return !snake.some(segment => checkCollision(segment, position));
 }
+
+export function wrapBounds(point: Point) {
+  point.x = point.x >= COLUMNS ? 0 : point.x < 0 ? COLUMNS - 1 : point.x;
+  point.y = point.y >= ROWS ? 0 : point.y < 0 ? ROWS - 1 : point.y;
+
+  return point;
+}
+
+export function paintCell(
+  ctx: CanvasRenderingContext2D,
+  point: Point,
+  color: string
+) {
+  const x = point.x * CELL_SIZE + point.x * GAP_SIZE;
+  const y = point.y * CELL_SIZE + point.y * GAP_SIZE;
+
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+}

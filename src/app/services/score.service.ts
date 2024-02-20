@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { scan, startWith } from 'rxjs';
-import { NavService } from '.';
+import { NavService, Point } from '.';
+import { FOOD_COUNT } from '../components/utils/constants';
+import { getRandomPoint } from '../components/utils/point';
 
 @Injectable({
   providedIn: 'root',
@@ -18,5 +20,15 @@ export class ScoreService {
 
   incrementScore() {
     this.navService.length$ = 1;
+  }
+
+  initFood(): Point[] {
+    const food = [];
+
+    for (let i = 0; i < FOOD_COUNT; i++) {
+      food.push(getRandomPoint());
+    }
+
+    return food;
   }
 }

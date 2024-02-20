@@ -21,6 +21,7 @@ export class NavService {
   // listen to keydown events and map to direction
   get direction$() {
     return fromEvent(document, 'keydown').pipe(
+      startWith({ keyCode: 39 }),
       map(event => DIRECTIONS[(event as KeyboardEvent).keyCode]),
       filter(direction => !!direction),
       startWith(DIRECTIONS[37]),

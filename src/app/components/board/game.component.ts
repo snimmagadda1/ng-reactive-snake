@@ -13,18 +13,26 @@ import {
 import {
   Subscription,
   animationFrame,
+  animationFrameScheduler,
   combineLatest,
   distinctUntilChanged,
+  filter,
   interval,
   map,
   scan,
   share,
   skip,
+  take,
   takeWhile,
   tap,
   withLatestFrom,
 } from 'rxjs';
-import { checkCollision, getRandomPoint } from '../utils/point';
+import {
+  checkCollision,
+  getRandomPoint,
+  paintCell,
+  wrapBounds,
+} from '../utils/point';
 
 @Component({
   selector: 'app-game',
@@ -35,6 +43,7 @@ import { checkCollision, getRandomPoint } from '../utils/point';
   template: `
     <div>
       <h1>Score: {{ scoreService.score$ | async }}</h1>
+      <button (click)="togglePause()">Start</button>
     </div>
     <canvas
       #board
@@ -47,6 +56,11 @@ export class GameComponent implements AfterViewInit {
   context!: CanvasRenderingContext2D;
 
   private subscription: Subscription = new Subscription();
+  paused = false;
+
+  togglePause() {
+    this.paused = !this.paused;
+  }
 
   constructor(
     private navService: NavService,
@@ -54,11 +68,13 @@ export class GameComponent implements AfterViewInit {
     private snakeService: SnakeService
   ) {
     // game clock publisher
-    const ticks$ = interval(500);
+    const ticks$ = interval(300);
 
     // snake publisher
     // tick -> [direction, snakeLength] -> move(snake, [direction, snakeLength]) -> snake[{}, ... {}]
     const snake$ = ticks$.pipe(
+      // take(10),
+      filter(() => !this.paused),
       withLatestFrom(this.navService.direction$, this.navService.snakeLength$),
       map(([_, direction, snakeLength]) => [direction, snakeLength]),
       scan(this.navService.move, this.snakeService.initSnake()),
@@ -67,29 +83,30 @@ export class GameComponent implements AfterViewInit {
 
     // food publisher
     const food$ = snake$.pipe(
-      scan(this.snakeService.eat, this.initFood()),
+      scan(this.snakeService.eat, this.scoreService.initFood()),
       distinctUntilChanged(),
       share()
     );
 
     // food score publisher (notifier for other streams)
-    this.subscription.add(
-      food$
-        .pipe(
-          skip(1),
-          tap(() => this.scoreService.incrementScore())
-        )
-        .subscribe()
-    );
+    // this.subscription.add(
+    //   food$
+    //     .pipe(
+    //       skip(1),
+    //       tap(() => this.scoreService.incrementScore())
+    //     )
+    //     .subscribe()
+    // );
 
     const scene$ = combineLatest([snake$, food$]);
 
     /**
      * This stream takes care of rendering the game while maintaining 60 FPS
      */
-    interval(1000 / FPS, animationFrame)
+    interval(1000 / FPS, animationFrameScheduler)
       .pipe(
-        withLatestFrom(scene$, (_, scene) => scene)
+        withLatestFrom(scene$),
+        map(([, scene]) => scene)
         // takeWhile(scene => !isGameOver(scene))
       )
       .subscribe({
@@ -98,55 +115,40 @@ export class GameComponent implements AfterViewInit {
       });
   }
 
-  renderScene(ctx: CanvasRenderingContext2D, scene: any) {
-    console.log(scene);
+  renderScene(ctx: CanvasRenderingContext2D, scene: [Point[], Point[]]) {
+    console.log(`Snake: ${JSON.stringify(scene[0])}`);
     // renderBackground(ctx);
     // renderScore(ctx, scene.score);
-    this.renderApples(ctx, scene[1]);
+    // this.renderApples(ctx, scene[1]);
+    this._clearCanvas(ctx);
     this.renderSnake(ctx, scene[0]);
   }
 
   renderApples(ctx: CanvasRenderingContext2D, apples: any[]) {
-    apples.forEach(apple => this.paintCell(ctx, apple, 'red'));
+    apples.forEach(apple => paintCell(ctx, apple, 'red'));
   }
 
   renderSnake(ctx: CanvasRenderingContext2D, snake: Point[]) {
     snake.forEach((segment, index) =>
-      this.paintCell(ctx, this.wrapBounds(segment), this.getSegmentColor(index))
+      paintCell(ctx, wrapBounds(segment), this._getSegmentColor(index))
     );
   }
 
-  getSegmentColor(index: number) {
+  _clearCanvas(ctx: CanvasRenderingContext2D) {
+    ctx.clearRect(
+      0,
+      0,
+      this.board.nativeElement.width,
+      this.board.nativeElement.height
+    );
+  }
+
+  _getSegmentColor(index: number) {
     return index === 0 ? 'black' : '#2196f3';
-  }
-
-  paintCell(ctx: CanvasRenderingContext2D, point: Point, color: string) {
-    const x = point.x * CELL_SIZE + point.x * GAP_SIZE;
-    const y = point.y * CELL_SIZE + point.y * GAP_SIZE;
-
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
-  }
-
-  wrapBounds(point: Point) {
-    point.x = point.x >= COLUMNS ? 0 : point.x < 0 ? COLUMNS - 1 : point.x;
-    point.y = point.y >= ROWS ? 0 : point.y < 0 ? ROWS - 1 : point.y;
-
-    return point;
   }
 
   ngAfterViewInit(): void {
     this.context = this.board.nativeElement.getContext('2d')!;
-  }
-
-  initFood(): Point[] {
-    const food = [];
-
-    for (let i = 0; i < FOOD_COUNT; i++) {
-      food.push(getRandomPoint());
-    }
-
-    return food;
   }
 
   get COLUMNS() {
