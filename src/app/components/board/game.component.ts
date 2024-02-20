@@ -27,12 +27,7 @@ import {
   tap,
   withLatestFrom,
 } from 'rxjs';
-import {
-  checkCollision,
-  getRandomPoint,
-  paintCell,
-  wrapBounds,
-} from '../utils/point';
+import { paintCell, wrapBounds } from '../utils/point';
 
 @Component({
   selector: 'app-game',
@@ -83,7 +78,7 @@ export class GameComponent implements AfterViewInit {
 
     // food publisher
     const food$ = snake$.pipe(
-      scan(this.snakeService.eat, this.scoreService.initFood()),
+      scan(this.scoreService.eat, this.scoreService.initFood()),
       distinctUntilChanged(),
       share()
     );
@@ -117,8 +112,8 @@ export class GameComponent implements AfterViewInit {
     console.log(`Snake: ${JSON.stringify(scene[0])}`);
     // renderBackground(ctx);
     // renderScore(ctx, scene.score);
-    this.renderApples(ctx, scene[1]);
     this._clearCanvas(ctx);
+    this.renderApples(ctx, scene[1]);
     this.renderSnake(ctx, scene[0]);
   }
 

@@ -23,32 +23,6 @@ export class SnakeService {
     return snake;
   }
 
-  eat(food: Point[], snake: Point[]): Point[] {
-    let head = snake[0];
-
-    for (let i = 0; i < food.length; i++) {
-      if (checkCollision(food[i], head)) {
-        food.splice(i, 1);
-        return [...food, this._getEmptyPosition(snake)];
-      }
-    }
-
-    return food;
-  }
-
-  _getEmptyPosition(snake: Point[] = []): Point {
-    let position = {
-      x: getRandomNumber(0, COLUMNS - 1),
-      y: getRandomNumber(0, ROWS - 1),
-    };
-
-    if (isEmptyCell(position, snake)) {
-      return position;
-    }
-
-    return this._getEmptyPosition(snake);
-  }
-
   // Publisher to push changes to snake length
   get snakeLength$() {
     return this._length$.asObservable().pipe(

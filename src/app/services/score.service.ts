@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { scan, startWith } from 'rxjs';
 import { NavService, Point } from '.';
-import { FOOD_COUNT } from '../components/utils/constants';
-import { getRandomPoint } from '../components/utils/point';
+import { COLUMNS, FOOD_COUNT, ROWS } from '../components/utils/constants';
+import { checkCollision, isEmptyCell } from '../components/utils/point';
+import { getRandomNumber } from '../components/utils/number';
 
 @Injectable({
   providedIn: 'root',
@@ -26,9 +27,38 @@ export class ScoreService {
     const food = [];
 
     for (let i = 0; i < FOOD_COUNT; i++) {
-      food.push(getRandomPoint());
+      food.push({
+        x: getRandomNumber(0, COLUMNS - 1),
+        y: getRandomNumber(0, ROWS - 1),
+      });
     }
 
     return food;
+  }
+
+  eat(food: Point[], snake: Point[]): Point[] {
+    let head = snake[0];
+
+    for (let i = 0; i < food.length; i++) {
+      if (checkCollision(food[i], head)) {
+        food.splice(i, 1);
+        return [...food, this._getEmptyPosition(snake)];
+      }
+    }
+
+    return food;
+  }
+
+  _getEmptyPosition(snake: Point[] = []): Point {
+    let position = {
+      x: getRandomNumber(0, COLUMNS - 1),
+      y: getRandomNumber(0, ROWS - 1),
+    };
+
+    if (isEmptyCell(position, snake)) {
+      return position;
+    }
+
+    return this._getEmptyPosition(snake);
   }
 }
