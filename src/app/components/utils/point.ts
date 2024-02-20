@@ -1,8 +1,22 @@
 import { Point } from '../../services';
 import { CELL_SIZE, COLUMNS, GAP_SIZE, ROWS } from './constants';
+import { getRandomNumber } from './number';
 
 export function checkCollision(p1: Point, p2: Point): boolean {
   return p1.x === p2.x && p1.y === p2.y;
+}
+
+export function getEmptyPosition(snake: Point[] = []): Point {
+  let position = {
+    x: getRandomNumber(0, COLUMNS - 1),
+    y: getRandomNumber(0, ROWS - 1),
+  };
+
+  if (isEmptyCell(position, snake)) {
+    return position;
+  }
+
+  return getEmptyPosition(snake);
 }
 
 export function isEmptyCell(position: Point, snake: Point[]): boolean {

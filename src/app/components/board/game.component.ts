@@ -12,7 +12,6 @@ import {
 
 import {
   Subscription,
-  animationFrame,
   animationFrameScheduler,
   combineLatest,
   distinctUntilChanged,
@@ -27,7 +26,7 @@ import {
   tap,
   withLatestFrom,
 } from 'rxjs';
-import { paintCell, wrapBounds } from '../utils/point';
+import { checkCollision, paintCell, wrapBounds } from '../utils/point';
 
 @Component({
   selector: 'app-game',
@@ -37,7 +36,7 @@ import { paintCell, wrapBounds } from '../utils/point';
   styleUrl: './game.component.scss',
   template: `
     <div>
-      <h1>Score: {{ scoreService.score$ | async }}</h1>
+      <h1>Score: {{ snakeLength$ | async }}</h1>
       <button (click)="togglePause()">Start</button>
     </div>
     <canvas
@@ -52,6 +51,7 @@ export class GameComponent implements AfterViewInit {
 
   private subscription: Subscription = new Subscription();
   paused = false;
+  snakeLength$ = this.navService.snakeLength$;
 
   togglePause() {
     this.paused = !this.paused;
@@ -63,14 +63,14 @@ export class GameComponent implements AfterViewInit {
     private snakeService: SnakeService
   ) {
     // game clock publisher
-    const ticks$ = interval(300);
+    const ticks$ = interval(100);
 
     // snake publisher
     // tick -> [direction, snakeLength] -> move(snake, [direction, snakeLength]) -> snake[{}, ... {}]
     const snake$ = ticks$.pipe(
       // take(10),
       filter(() => !this.paused),
-      withLatestFrom(this.navService.direction$, this.navService.snakeLength$),
+      withLatestFrom(this.navService.direction$, this.snakeLength$),
       map(([_, direction, snakeLength]) => [direction, snakeLength]),
       scan(this.navService.move, this.snakeService.initSnake()),
       share()
@@ -99,12 +99,12 @@ export class GameComponent implements AfterViewInit {
     interval(1000 / FPS, animationFrameScheduler)
       .pipe(
         withLatestFrom(scene$),
-        map(([, scene]) => scene)
-        // takeWhile(scene => !isGameOver(scene))
+        map(([, scene]) => scene),
+        takeWhile(scene => !this.isGameOver(scene))
       )
       .subscribe({
         next: scene => this.renderScene(this.context, scene),
-        // complete: () => this.renderGameOver(this.context),
+        // complete: () => TODO (should do game over),
       });
   }
 
@@ -125,6 +125,14 @@ export class GameComponent implements AfterViewInit {
     snake.forEach((segment, index) =>
       paintCell(ctx, wrapBounds(segment), this._getSegmentColor(index))
     );
+  }
+
+  isGameOver(scene: [Point[], Point[]]) {
+    let snake = scene[0];
+    let head = snake[0];
+    let body = snake.slice(1, snake.length);
+
+    return body.some(segment => checkCollision(segment, head));
   }
 
   _clearCanvas(ctx: CanvasRenderingContext2D) {

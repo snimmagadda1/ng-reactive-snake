@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { scan, startWith } from 'rxjs';
 import { NavService, Point } from '.';
 import { COLUMNS, FOOD_COUNT, ROWS } from '../components/utils/constants';
-import { checkCollision, isEmptyCell } from '../components/utils/point';
+import { checkCollision, getEmptyPosition } from '../components/utils/point';
 import { getRandomNumber } from '../components/utils/number';
 
 @Injectable({
@@ -42,23 +42,10 @@ export class ScoreService {
     for (let i = 0; i < food.length; i++) {
       if (checkCollision(food[i], head)) {
         food.splice(i, 1);
-        return [...food, this._getEmptyPosition(snake)];
+        return [...food, getEmptyPosition(snake)];
       }
     }
 
     return food;
-  }
-
-  _getEmptyPosition(snake: Point[] = []): Point {
-    let position = {
-      x: getRandomNumber(0, COLUMNS - 1),
-      y: getRandomNumber(0, ROWS - 1),
-    };
-
-    if (isEmptyCell(position, snake)) {
-      return position;
-    }
-
-    return this._getEmptyPosition(snake);
   }
 }

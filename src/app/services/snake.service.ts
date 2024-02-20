@@ -1,9 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, scan, share } from 'rxjs';
 import { Point } from '.';
-import { checkCollision, isEmptyCell } from '../components/utils/point';
-import { getRandomNumber } from '../components/utils/number';
-import { COLUMNS, ROWS } from '../components/utils/constants';
 
 @Injectable({
   providedIn: 'root',
