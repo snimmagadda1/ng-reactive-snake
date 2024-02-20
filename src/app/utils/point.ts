@@ -1,4 +1,4 @@
-import { Point } from '../../services';
+import { Point } from '../services';
 import { CELL_SIZE, COLUMNS, GAP_SIZE, ROWS } from './constants';
 import { getRandomNumber } from './number';
 

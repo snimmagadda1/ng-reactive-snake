@@ -1,9 +1,14 @@
 import { Injectable } from '@angular/core';
 import { scan, startWith } from 'rxjs';
 import { NavService, Point } from '.';
-import { COLUMNS, FOOD_COUNT, ROWS } from '../components/utils/constants';
-import { checkCollision, getEmptyPosition } from '../components/utils/point';
-import { getRandomNumber } from '../components/utils/number';
+import {
+  COLUMNS,
+  FOOD_COUNT,
+  ROWS,
+  checkCollision,
+  getEmptyPosition,
+  getRandomNumber,
+} from '../utils';
 
 @Injectable({
   providedIn: 'root',

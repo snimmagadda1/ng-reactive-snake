@@ -1,14 +1,6 @@
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { NavService, Point, ScoreService, SnakeService } from '../../services';
 import { CommonModule } from '@angular/common';
-import {
-  COLUMNS,
-  ROWS,
-  CELL_SIZE,
-  GAP_SIZE,
-  FOOD_COUNT,
-  FPS,
-} from '../utils/constants';
 
 import {
   Subscription,
@@ -26,7 +18,17 @@ import {
   tap,
   withLatestFrom,
 } from 'rxjs';
-import { checkCollision, paintCell, wrapBounds } from '../utils/point';
+import {
+  checkCollision,
+  paintCell,
+  wrapBounds,
+  CELL_SIZE,
+  COLUMNS,
+  FOOD_COUNT,
+  FPS,
+  GAP_SIZE,
+  ROWS,
+} from '../../utils';
 
 @Component({
   selector: 'app-game',
@@ -36,7 +38,7 @@ import { checkCollision, paintCell, wrapBounds } from '../utils/point';
   styleUrl: './game.component.scss',
   template: `
     <div>
-      <h1>Score: {{ snakeLength$ | async }}</h1>
+      <h1>Score: {{ (snakeLength$ | async) || 5 }}</h1>
       <button (click)="togglePause()">Start</button>
     </div>
     <canvas
