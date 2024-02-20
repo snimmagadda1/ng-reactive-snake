@@ -89,20 +89,18 @@ export class GameComponent implements AfterViewInit {
     );
 
     // food score publisher (notifier for other streams)
-    // this.subscription.add(
-    //   food$
-    //     .pipe(
-    //       skip(1),
-    //       tap(() => this.scoreService.incrementScore())
-    //     )
-    //     .subscribe()
-    // );
+    this.subscription.add(
+      food$
+        .pipe(
+          skip(1),
+          tap(() => this.scoreService.incrementScore())
+        )
+        .subscribe()
+    );
 
     const scene$ = combineLatest([snake$, food$]);
 
-    /**
-     * This stream takes care of rendering the game while maintaining 60 FPS
-     */
+    // render loop, 60 fps
     interval(1000 / FPS, animationFrameScheduler)
       .pipe(
         withLatestFrom(scene$),
@@ -119,7 +117,7 @@ export class GameComponent implements AfterViewInit {
     console.log(`Snake: ${JSON.stringify(scene[0])}`);
     // renderBackground(ctx);
     // renderScore(ctx, scene.score);
-    // this.renderApples(ctx, scene[1]);
+    this.renderApples(ctx, scene[1]);
     this._clearCanvas(ctx);
     this.renderSnake(ctx, scene[0]);
   }
