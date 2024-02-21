@@ -1,4 +1,10 @@
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 import { NavService, Point, ScoreService, SnakeService } from '../../services';
 import { CommonModule } from '@angular/common';
 
@@ -39,28 +45,47 @@ import {
   template: `
     <div>
       <h1>Score: {{ (snakeLength$ | async) || 5 }}</h1>
-      <button (click)="togglePause()">Start</button>
+      <button (click)="togglePause()">{{ paused ? 'Start' : 'Pause' }}</button>
     </div>
-    <canvas
-      #board
-      [width]="COLUMNS * (CELL_SIZE + GAP_SIZE)"
-      [height]="ROWS * (CELL_SIZE + GAP_SIZE)"></canvas>
+    <div class="game-display">
+      <canvas
+        #board
+        [width]="COLUMNS * (CELL_SIZE + GAP_SIZE)"
+        [height]="ROWS * (CELL_SIZE + GAP_SIZE)">
+      </canvas>
+      <div class="info">
+        <h3>Publisher info</h3>
+        <div>
+          <h4>tick$</h4>
+          <span>{{ tickOut | json }}</span>
+        </div>
+        <div>
+          <h4>direction$</h4>
+          <span>{{ directionOut | json }}</span>
+        </div>
+        <div>
+          <h4>snake$</h4>
+          <span>{{ snakeOut | json }}</span>
+        </div>
+      </div>
+    </div>
   `,
 })
-export class GameComponent implements AfterViewInit {
+export class GameComponent implements AfterViewInit, OnDestroy {
   @ViewChild('board') board!: ElementRef<HTMLCanvasElement>;
   context!: CanvasRenderingContext2D;
 
   private subscription: Subscription = new Subscription();
   paused = false;
-  snakeLength$ = this.navService.snakeLength$;
 
-  togglePause() {
-    this.paused = !this.paused;
-  }
+  // Display vals
+  snakeLength$ = this.navService.snakeLength$;
+  tickOut: number | undefined;
+  directionOut: Point | undefined;
+  snakeOut: Point[] = [];
 
   constructor(
-    private navService: NavService,
+    public navService: NavService,
     public scoreService: ScoreService,
     private snakeService: SnakeService
   ) {
@@ -70,11 +95,21 @@ export class GameComponent implements AfterViewInit {
     // snake publisher
     // tick -> [direction, snakeLength] -> move(snake, [direction, snakeLength]) -> snake[{}, ... {}]
     const snake$ = ticks$.pipe(
-      // take(10),
+      tap(tick => {
+        this.tickOut = tick;
+      }),
       filter(() => !this.paused),
       withLatestFrom(this.navService.direction$, this.snakeLength$),
       map(([_, direction, snakeLength]) => [direction, snakeLength]),
+      tap(out => {
+        if (out[0] !== undefined) {
+          this.directionOut = out[0] as Point;
+        }
+      }),
       scan(this.navService.move, this.snakeService.initSnake()),
+      tap(snake => {
+        this.snakeOut = snake;
+      }),
       share()
     );
 
@@ -110,10 +145,15 @@ export class GameComponent implements AfterViewInit {
       });
   }
 
+  ngAfterViewInit(): void {
+    this.context = this.board.nativeElement.getContext('2d')!;
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
   renderScene(ctx: CanvasRenderingContext2D, scene: [Point[], Point[]]) {
-    console.log(`Snake: ${JSON.stringify(scene[0])}`);
-    // renderBackground(ctx);
-    // renderScore(ctx, scene.score);
     this._clearCanvas(ctx);
     this.renderApples(ctx, scene[1]);
     this.renderSnake(ctx, scene[0]);
@@ -137,6 +177,10 @@ export class GameComponent implements AfterViewInit {
     return body.some(segment => checkCollision(segment, head));
   }
 
+  togglePause() {
+    this.paused = !this.paused;
+  }
+
   _clearCanvas(ctx: CanvasRenderingContext2D) {
     ctx.clearRect(
       0,
@@ -148,10 +192,6 @@ export class GameComponent implements AfterViewInit {
 
   _getSegmentColor(index: number) {
     return index === 0 ? 'black' : '#2196f3';
-  }
-
-  ngAfterViewInit(): void {
-    this.context = this.board.nativeElement.getContext('2d')!;
   }
 
   get COLUMNS() {
