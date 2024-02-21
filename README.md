@@ -1,27 +1,32 @@
-# NgReactiveSnakes
+# ng Reactive Snakes
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.2.0.
+The classic game of snake! Built using reactive programming & angular:
 
-## Development server
+![Snake game gif](./snake.gif)
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## Why build this?
 
-## Code scaffolding
+This is an exercise in thinking & programming reactively. The intent here is not to make a beautiful game, but rather expose the internals of how something like this can be built.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## About the build
 
-## Build
+The game is driven by only a handful of source streams:
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+| Source stream | Function | Code |
+|----------|----------|----------|
+| `tick$` | game clock interval that dictate snake pace | `interval(100)`  |
+| `direction$` | mapped output from KeyboardEvent listener | `fromEvent(document, 'keydown').pipe(startWith({ keyCode: 39 }),map(event => DIRECTIONS[(event as KeyboardEvent).keyCode]),filter(direction => !!direction),startWith(DIRECTIONS[37]),distinctUntilChanged());`  |
+| `snakeLength$` | accumulator to track the length of the snake | `this._length$.asObservable().pipe(scan((acc, length) => length + acc),share())`  |
 
-## Running unit tests
+## Getting started
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+The simplest way to run is simply clone, install deps, & start up the angular dev server:
 
-## Running end-to-end tests
+```bash
+git clone https://github.com/snimmagadda1/ng-reactive-snake.git
+cd ng-reactive-snake
+npm install 
+npm run start
+```
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+You will be able to play the game and monitor key streams.
