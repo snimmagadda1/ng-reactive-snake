@@ -6,7 +6,7 @@ The classic game of snake! Built using reactive programming & angular:
 
 ## Why build this?
 
-This is an exercise in thinking & programming reactively. The intent here is not to make a beautiful game, but rather expose the internals of how something like this can be built.
+This is an exercise in thinking & programming reactively. The intent here is not to make a beautiful game, but rather expose the internals of how something like this can be built. This is a version of [this approach](https://blog.thoughtram.io/rxjs/2017/08/24/taming-snakes-with-reactive-streams.html) using modern RxJS
 
 ## About the build
 
